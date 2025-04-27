@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
-
 	"github.com/charmbracelet/log"
 	"github.com/mark3labs/mcphost/pkg/history"
 	"github.com/mark3labs/mcphost/pkg/llm"
 	api "github.com/ollama/ollama/api"
+	"github.com/ollama/ollama/types/model"
 )
 
 func boolPtr(b bool) *bool {
@@ -140,11 +139,14 @@ func (p *Provider) CreateMessage(
 				Description: tool.Description,
 				Parameters: struct {
 					Type       string   `json:"type"`
+					Defs       any      `json:"$defs,omitempty"`
+					Items      any      `json:"items,omitempty"`
 					Required   []string `json:"required"`
 					Properties map[string]struct {
-						Type        string   `json:"type"`
-						Description string   `json:"description"`
-						Enum        []string `json:"enum,omitempty"`
+						Type        api.PropertyType `json:"type"`
+						Items       any              `json:"items,omitempty"`
+						Description string           `json:"description"`
+						Enum        []any            `json:"enum,omitempty"`
 					} `json:"properties"`
 				}{
 					Type:       tool.InputSchema.Type,
@@ -192,7 +194,12 @@ func (p *Provider) SupportsTools() bool {
 	if err != nil {
 		return false
 	}
-	return strings.Contains(resp.Modelfile, "<tools>")
+	for _, capability := range resp.Capabilities {
+		if capability == model.CapabilityTools {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Provider) Name() string {
@@ -247,24 +254,27 @@ func (p *Provider) CreateToolResponse(
 
 // Helper function to convert properties to Ollama's format
 func convertProperties(props map[string]interface{}) map[string]struct {
-	Type        string   `json:"type"`
-	Description string   `json:"description"`
-	Enum        []string `json:"enum,omitempty"`
+	Type        api.PropertyType `json:"type"`
+	Items       any              `json:"items,omitempty"`
+	Description string           `json:"description"`
+	Enum        []any            `json:"enum,omitempty"`
 } {
 	result := make(map[string]struct {
-		Type        string   `json:"type"`
-		Description string   `json:"description"`
-		Enum        []string `json:"enum,omitempty"`
+		Type        api.PropertyType `json:"type"`
+		Items       any              `json:"items,omitempty"`
+		Description string           `json:"description"`
+		Enum        []any            `json:"enum,omitempty"`
 	})
 
 	for name, prop := range props {
 		if propMap, ok := prop.(map[string]interface{}); ok {
 			prop := struct {
-				Type        string   `json:"type"`
-				Description string   `json:"description"`
-				Enum        []string `json:"enum,omitempty"`
+				Type        api.PropertyType `json:"type"`
+				Items       any              `json:"items,omitempty"`
+				Description string           `json:"description"`
+				Enum        []any            `json:"enum,omitempty"`
 			}{
-				Type:        getString(propMap, "type"),
+				Type:        []string{getString(propMap, "type")},
 				Description: getString(propMap, "description"),
 			}
 
