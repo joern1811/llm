@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mark3labs/mcphost/pkg/llm"
+	"github.com/joern1811/llm/pkg/llm"
 	api "github.com/ollama/ollama/api"
 )
 

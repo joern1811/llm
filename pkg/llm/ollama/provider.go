@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/charmbracelet/log"
-	"github.com/mark3labs/mcphost/pkg/history"
-	"github.com/mark3labs/mcphost/pkg/llm"
-	api "github.com/ollama/ollama/api"
+	"github.com/joern1811/llm/pkg/history"
+	"github.com/joern1811/llm/pkg/llm"
+	"github.com/ollama/ollama/api"
 	"github.com/ollama/ollama/types/model"
 )
 
@@ -41,11 +40,6 @@ func (p *Provider) CreateMessage(
 	messages []llm.Message,
 	tools []llm.Tool,
 ) (llm.Message, error) {
-	log.Debug("creating message",
-		"prompt", prompt,
-		"num_messages", len(messages),
-		"num_tools", len(tools))
-
 	// Convert generic messages to Ollama format
 	ollamaMessages := make([]api.Message, 0, len(messages)+1)
 
@@ -158,14 +152,6 @@ func (p *Provider) CreateMessage(
 	}
 
 	var response api.Message
-	log.Debug("creating message",
-		"prompt", prompt,
-		"num_messages", len(messages),
-		"num_tools", len(tools))
-
-	log.Debug("sending messages to Ollama",
-		"messages", ollamaMessages,
-		"num_tools", len(tools))
 
 	err := p.client.Chat(ctx, &api.ChatRequest{
 		Model:    p.model,
@@ -210,27 +196,16 @@ func (p *Provider) CreateToolResponse(
 	toolCallID string,
 	content interface{},
 ) (llm.Message, error) {
-	log.Debug("creating tool response",
-		"tool_call_id", toolCallID,
-		"content_type", fmt.Sprintf("%T", content),
-		"content", content)
-
 	contentStr := ""
 	switch v := content.(type) {
 	case string:
 		contentStr = v
-		log.Debug("using string content directly")
 	default:
 		bytes, err := json.Marshal(v)
 		if err != nil {
-			log.Error("failed to marshal tool response",
-				"error", err,
-				"content", content)
 			return nil, fmt.Errorf("error marshaling tool response: %w", err)
 		}
 		contentStr = string(bytes)
-		log.Debug("marshaled content to JSON string",
-			"result", contentStr)
 	}
 
 	// Create message with explicit tool role
@@ -242,12 +217,6 @@ func (p *Provider) CreateToolResponse(
 		},
 		ToolCallID: toolCallID,
 	}
-
-	log.Debug("created tool response message",
-		"role", msg.GetRole(),
-		"content", msg.GetContent(),
-		"tool_call_id", msg.GetToolResponseID(),
-		"raw_content", contentStr)
 
 	return msg, nil
 }

@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/log"
-	"github.com/mark3labs/mcphost/pkg/history"
-	"github.com/mark3labs/mcphost/pkg/llm"
+	"github.com/joern1811/llm/pkg/history"
+	"github.com/joern1811/llm/pkg/llm"
 )
 
 type Provider struct {
@@ -19,7 +18,7 @@ type Provider struct {
 
 func NewProvider(apiKey, baseURL, model, systemPrompt string) *Provider {
 	if model == "" {
-		model = "claude-3-5-sonnet-20240620" // 默认模型
+		model = "claude-3-5-sonnet-20240620"
 	}
 	return &Provider{
 		client:       NewClient(apiKey, baseURL),
@@ -34,20 +33,12 @@ func (p *Provider) CreateMessage(
 	messages []llm.Message,
 	tools []llm.Tool,
 ) (llm.Message, error) {
-	log.Debug("creating message",
-		"prompt", prompt,
-		"num_messages", len(messages),
-		"num_tools", len(tools))
 
 	anthropicMessages := make([]MessageParam, 0, len(messages))
 
 	for _, msg := range messages {
-		log.Debug("converting message",
-			"role", msg.GetRole(),
-			"content", msg.GetContent(),
-			"is_tool_response", msg.IsToolResponse())
 
-		content := []ContentBlock{}
+		var content []ContentBlock
 
 		// Add regular text content if present
 		if textContent := strings.TrimSpace(msg.GetContent()); textContent != "" {
@@ -70,10 +61,6 @@ func (p *Provider) CreateMessage(
 
 		// Handle tool responses
 		if msg.IsToolResponse() {
-			log.Debug("processing tool response",
-				"tool_call_id", msg.GetToolResponseID(),
-				"raw_message", msg)
-
 			if historyMsg, ok := msg.(*history.HistoryMessage); ok {
 				for _, block := range historyMsg.Content {
 					if block.Type == "tool_result" {
@@ -127,10 +114,6 @@ func (p *Provider) CreateMessage(
 		}
 	}
 
-	log.Debug("sending messages to Anthropic",
-		"messages", anthropicMessages,
-		"num_tools", len(tools))
-
 	// Make the API call
 	resp, err := p.client.CreateMessage(ctx, CreateRequest{
 		Model:     p.model,
@@ -158,11 +141,6 @@ func (p *Provider) CreateToolResponse(
 	toolCallID string,
 	content interface{},
 ) (llm.Message, error) {
-	log.Debug("creating tool response",
-		"tool_call_id", toolCallID,
-		"content_type", fmt.Sprintf("%T", content),
-		"content", content)
-
 	var contentStr string
 	var structuredContent interface{} = content
 

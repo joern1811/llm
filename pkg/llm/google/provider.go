@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/google/generative-ai-go/genai"
-	"github.com/mark3labs/mcphost/pkg/history"
-	"github.com/mark3labs/mcphost/pkg/llm"
+	"github.com/joern1811/llm/pkg/history"
+	"github.com/joern1811/llm/pkg/llm"
 	"google.golang.org/api/option"
 )
 
