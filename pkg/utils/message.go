@@ -2,7 +2,7 @@ package utils
 
 import "github.com/joern1811/llm/pkg/history"
 
-func pruneMessages(messages []history.HistoryMessage, messageWindow int) []history.HistoryMessage {
+func PruneMessages(messages []history.HistoryMessage, messageWindow int) []history.HistoryMessage {
 	if len(messages) <= messageWindow {
 		return messages
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 // Add new function to create provider
-func createProvider(ctx context.Context, modelString, baseURL, apiKey, systemPrompt string) (llm.Provider, error) {
+func CreateProvider(ctx context.Context, modelString, baseURL, apiKey, systemPrompt string) (llm.Provider, error) {
 	parts := strings.SplitN(modelString, ":", 2)
 	if len(parts) < 2 {
 		return nil, fmt.Errorf(
